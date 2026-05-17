@@ -6,7 +6,7 @@ import { Button } from '../components/Button';
 import { ChessBoard, isPromoting } from '../components/ChessBoard';
 import { useSocket } from '../hooks/useSocket';
 import { Chess, Move } from 'chess.js';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import MovesTable from '../components/MovesTable';
 import { useUser } from '@repo/store/useUser';
 import { UserAvatar } from '../components/UserAvatar';
@@ -41,9 +41,10 @@ export interface Player {
   name: string;
   isGuest: boolean;
 }
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilValue, useSetRecoilState, useRecoilState } from 'recoil';
 
 import { movesAtom, userSelectedMoveIndexAtom } from '@repo/store/chessBoard';
+import { userAtom } from '@repo/store/userAtom';
 import GameEndModal from '@/components/GameEndModal';
 import { Waitopponent } from '@/components/ui/waitopponent';
 import { ShareGame } from '../components/ShareGame';
@@ -59,7 +60,9 @@ export interface Metadata {
 export const Game = () => {
   const socket = useSocket();
   const { gameId } = useParams();
+  const [searchParams] = useSearchParams();
   const user = useUser();
+  const [_user, setUser] = useRecoilState(userAtom);
 
   const navigate = useNavigate();
   // Todo move to store/context
@@ -81,7 +84,21 @@ export const Game = () => {
   }, [userSelectedMoveIndex]);
 
   useEffect(() => {
-    if (!user) {
+    const token = searchParams.get('token');
+    if (token) {
+      try {
+        const parts = token.split('.');
+        const payload = JSON.parse(atob(parts[1]));
+        setUser({ id: payload.userId, name: payload.name, token });
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch (e) {
+        console.error('Failed to parse token', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user && !searchParams.get('token')) {
       window.location.href = '/login';
     }
   }, [user]);

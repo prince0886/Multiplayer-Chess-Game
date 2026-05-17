@@ -114,9 +114,14 @@ router.get(
 router.get(
   '/google/callback',
   passport.authenticate('google', {
-    successRedirect: CLIENT_URL,
-    failureRedirect: '/login/failed',
+    failureRedirect: '/auth/login/failed',
+    session: true,
   }),
+  (req: Request, res: Response) => {
+    const user = req.user as UserDetails;
+    const token = jwt.sign({ userId: user.id, name: user.name }, JWT_SECRET);
+    res.redirect(`${CLIENT_URL}?token=${token}`);
+  }
 );
 
 router.get(
@@ -127,9 +132,14 @@ router.get(
 router.get(
   '/github/callback',
   passport.authenticate('github', {
-    successRedirect: CLIENT_URL,
-    failureRedirect: '/login/failed',
+    failureRedirect: '/auth/login/failed',
+    session: true,
   }),
+  (req: Request, res: Response) => {
+    const user = req.user as UserDetails;
+    const token = jwt.sign({ userId: user.id, name: user.name }, JWT_SECRET);
+    res.redirect(`${CLIENT_URL}?token=${token}`);
+  }
 );
 
 export default router;

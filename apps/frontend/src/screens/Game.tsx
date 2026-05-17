@@ -88,7 +88,9 @@ export const Game = () => {
     if (token) {
       try {
         const parts = token.split('.');
-        const payload = JSON.parse(atob(parts[1]));
+        const base64Url = parts[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(atob(base64));
         setUser({ id: payload.userId, name: payload.name, token });
         window.history.replaceState({}, '', window.location.pathname);
       } catch (e) {
